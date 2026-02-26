@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "JWT Multi-Tenant Auth - Complete Flow",
+    "description": "Complete authentication system with tenant registration, user registration, login, and protected routes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Step 1 - Register Tenant",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tenant One\",\n  \"email\": \"tenant1@example.com\",\n  \"mobile\": \"+1234567890\",\n  \"password\": \"tenant123\",\n  \"slug\": \"tenant1\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/tenant/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "tenant", "register"]
+        },
+        "description": "Register a new tenant with name, email, mobile, password, and slug. Do this FIRST before registering users."
+      },
+      "response": []
+    },
+    {
+      "name": "Step 2 - Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-tenant-slug",
+            "value": "tenant1",
+            "description": "Tenant identifier"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "register"]
+        },
+        "description": "Register a new user under tenant1"
+      },
+      "response": []
+    },
+    {
+      "name": "Step 3 - Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-tenant-slug",
+            "value": "tenant1",
+            "description": "Tenant identifier"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/login",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "login"]
+        },
+        "description": "Login and get access token. Copy the accessToken from response."
+      },
+      "response": []
+    },
+    {
+      "name": "Step 4 - Access Protected Route",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "description": "Paste access token from login response"
+          },
+          {
+            "key": "x-tenant-slug",
+            "value": "tenant1",
+            "description": "Tenant identifier"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/protected",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "protected"]
+        },
+        "description": "Test protected route with JWT token"
+      },
+      "response": []
+    },
+    {
+      "name": "Extra - Register Second Tenant",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tenant Two\",\n  \"email\": \"tenant2@example.com\",\n  \"mobile\": \"+0987654321\",\n  \"password\": \"tenant456\",\n  \"slug\": \"tenant2\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/tenant/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "tenant", "register"]
+        },
+        "description": "Register second tenant to test multi-tenancy"
+      },
+      "response": []
+    },
+    {
+      "name": "Extra - Register User in Tenant2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-tenant-slug",
+            "value": "tenant2",
+            "description": "Different tenant"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password456\",\n  \"name\": \"John Doe Tenant2\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/register",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "register"]
+        },
+        "description": "Same email can exist in different tenants"
+      },
+      "response": []
+    }
+  ]
+}
