@@ -16,6 +16,14 @@ class UserRepository {
     );
     return rows[0];
   }
+
+  async getAllByTenant(tenantId) {
+    const [rows] = await pool.query(
+      "SELECT id, name, email, status, created_at FROM users WHERE tenant_id=?",
+      [tenantId]
+    );
+    return rows;
+  }
 }
 
 module.exports = new UserRepository();

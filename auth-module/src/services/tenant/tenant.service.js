@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const pool = require("../../config/database");
 const passwordService = require("../security/password.service");
+const tokenService = require("../security/token.service");
 
 class TenantService {
   async register(name, email, mobile, password, slug) {
@@ -27,6 +28,41 @@ class TenantService {
     );
 
     return { id: tenantId, name, email, mobile, slug };
+  }
+
+  async login(email, password) {
+    const [tenants] = await pool.query(
+      "SELECT * FROM tenants WHERE email=? AND status='active'",
+      [email]
+    );
+
+    if (!tenants.length) throw new Error("Invalid credentials");
+
+    const tenant = tenants[0];
+    const valid = await passwordService.compare(password, tenant.password_hash);
+
+    if (!valid) throw new Error("Invalid credentials");
+
+    const accessToken = tokenService.generateAccessToken({
+      sub: tenant.id,
+      tid: tenant.id,
+      userType: "tenant",
+      email: tenant.email
+    });
+
+    const refreshToken = uuidv4();
+
+    return {
+      message: "Tenant login successful",
+      accessToken,
+      refreshToken,
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        email: tenant.email,
+        slug: tenant.slug
+      }
+    };
   }
 }
 

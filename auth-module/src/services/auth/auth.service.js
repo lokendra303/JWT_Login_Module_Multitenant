@@ -37,6 +37,7 @@ class AuthService {
       sub: user.id,
       tid: tenant.id,
       role: user.role_id,
+      userType: "user",
       tokenVersion: user.token_version
     });
 

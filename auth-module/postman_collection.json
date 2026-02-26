@@ -91,7 +91,34 @@
       "response": []
     },
     {
-      "name": "Step 4 - Access Protected Route",
+      "name": "Step 4 - Get All Users (Tenant-Specific)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}",
+            "description": "Paste access token from login response"
+          },
+          {
+            "key": "x-tenant-slug",
+            "value": "tenant1",
+            "description": "Tenant identifier"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/users",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "users"]
+        },
+        "description": "Get all users under the tenant. Only returns users belonging to the tenant."
+      },
+      "response": []
+    },
+    {
+      "name": "Step 5 - Access Protected Route",
       "request": {
         "method": "GET",
         "header": [
