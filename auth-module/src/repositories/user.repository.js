@@ -19,7 +19,7 @@ class UserRepository {
 
   async getAllByTenant(tenantId) {
     const [rows] = await pool.query(
-      "SELECT id, name, email, status, created_at FROM users WHERE tenant_id=?",
+      "SELECT id, name, email, COALESCE(role_id, 'user') as role, status, created_at FROM users WHERE tenant_id=?",
       [tenantId]
     );
     return rows;

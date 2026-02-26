@@ -33,12 +33,34 @@ router.get(
   userController.getAllUsers
 );
 
-// User login
-router.post(
-  "/login",
+// Tenant updates user
+router.put(
+  "/tenant/users/:id",
   resolveTenant,
-  authController.login
+  authenticate,
+  checkRole(["tenant"]),
+  userController.updateUser
 );
+
+// Tenant deletes user
+router.delete(
+  "/tenant/users/:id",
+  resolveTenant,
+  authenticate,
+  checkRole(["tenant"]),
+  userController.deleteUser
+);
+
+// Tenant updates own profile
+router.put(
+  "/tenant/profile",
+  authenticate,
+  checkRole(["tenant"]),
+  tenantController.updateProfile
+);
+
+// User login (no tenant middleware - finds tenant from email)
+router.post("/login", authController.login);
 
 // Protected route example
 router.get(

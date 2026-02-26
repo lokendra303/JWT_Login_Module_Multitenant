@@ -7,8 +7,12 @@ const pool = require("../../config/database");
 
 class AuthService {
   async register(email, password, name, tenant) {
-    const existing = await userRepository.findByEmail(email, tenant.id);
-    if (existing) throw new Error("Email already exists");
+    // Check if email exists globally
+    const [globalCheck] = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+    if (globalCheck.length) throw new Error("Email already registered");
 
     const passwordHash = await passwordService.hash(password);
     const userId = uuidv4();
@@ -21,21 +25,35 @@ class AuthService {
     return { id: userId, email, name };
   }
 
-  async login(email, password, tenant) {
-    const user = await userRepository.findByEmail(email, tenant.id);
+  async login(email, password, tenant = null) {
+    let user;
+    let tenantData;
 
-    if (!user) throw new Error("Invalid credentials");
+    if (tenant) {
+      // Login with tenant context (from middleware)
+      user = await userRepository.findByEmail(email, tenant.id);
+      tenantData = tenant;
+    } else {
+      // Find user across all tenants by email
+      const [users] = await pool.query(
+        "SELECT u.*, t.id as tenant_id, t.slug as tenant_slug, t.name as tenant_name FROM users u JOIN tenants t ON u.tenant_id = t.id WHERE u.email = ? AND u.status = 'active' LIMIT 1",
+        [email]
+      );
+      
+      if (!users.length) throw new Error("Invalid email or password");
+      
+      user = users[0];
+      tenantData = { id: user.tenant_id, slug: user.tenant_slug, name: user.tenant_name };
+    }
 
-    const valid = await passwordService.compare(
-      password,
-      user.password_hash
-    );
+    if (!user) throw new Error("Invalid email or password");
 
-    if (!valid) throw new Error("Invalid credentials");
+    const valid = await passwordService.compare(password, user.password_hash);
+    if (!valid) throw new Error("Invalid email or password");
 
     const accessToken = tokenService.generateAccessToken({
       sub: user.id,
-      tid: tenant.id,
+      tid: tenantData.id,
       role: user.role_id,
       userType: "user",
       tokenVersion: user.token_version
@@ -48,7 +66,18 @@ class AuthService {
       [uuidv4(), user.id, refreshToken]
     );
 
-    return { accessToken, refreshToken };
+    return {
+      message: "Login successful",
+      token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role_id,
+        tenant_id: tenantData.id,
+        tenant_name: tenantData.name
+      }
+    };
   }
 }
 

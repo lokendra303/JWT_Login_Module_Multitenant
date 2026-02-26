@@ -9,6 +9,27 @@ class UserController {
       next(err);
     }
   }
+
+  async updateUser(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { name, email } = req.body;
+      await userService.updateUser(id, req.tenant.id, { name, email });
+      res.json({ message: "User updated successfully" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async deleteUser(req, res, next) {
+    try {
+      const { id } = req.params;
+      await userService.deleteUser(id, req.tenant.id);
+      res.json({ message: "User deleted successfully" });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new UserController();
