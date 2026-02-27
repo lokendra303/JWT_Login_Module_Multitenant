@@ -14,18 +14,20 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      // Try tenant login first
+      // Try tenant login first (silently)
       try {
         const { data } = await tenantLogin(formData);
         login(data.tenant, data.token, data.tenant.id, 'tenant');
         navigate('/dashboard');
         return;
       } catch (tenantErr) {
-        // If tenant login fails, try user login
-        const { data } = await userLogin(formData);
-        login(data.user, data.token, data.user.tenant_id, data.user.role);
-        navigate('/dashboard');
+        // Silently fail and try user login
       }
+      
+      // Try user login
+      const { data } = await userLogin(formData);
+      login(data.user, data.token, data.user.tenant_id, data.user.role);
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials');
     }
